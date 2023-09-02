@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot Interface</title>
+    {% load static %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fontawesome.com/icons/paper-plane?f=classic&s=solid" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+          <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+          <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+        <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+        <link href="https://fontawesome.com/icons/circle-up?f=sharp&s=light&an=shake">
+        <script src="https://kit.fontawesome.com/c4254e24a8.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="https://fontawesome.com/icons/circle?f=classic&s=light">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@200&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fontawesome.com/icons/paper-plane?f=classic&s=solid" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+        /* Add your CSS styles here */
+        #floating-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #chatbox {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            width: 300px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 10px;
+            z-index: 999;
+            background-color:#ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            max-width: 300px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateY(100%); /* Start chatbox below the screen */
+            opacity: 0;
+        }
+        #chatbox.open {
+            transform: translateY(0); /* Slide chatbox up to show */
+            opacity: 1;
+        }
+        #chatbox.closed {
+            transform: translateY(100%); /* Slide chatbox down to hide */
+            opacity: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #chat-log {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin; /* Set the width of the scroll bar */
+            scrollbar-color: #000000 #000000;
+        }
+
+        #chat-log::-webkit-scrollbar {
+            width: 4px; /* Set the width of the scroll bar for WebKit browsers (Chrome, Safari) */
+        }
+
+        #chat-log::-webkit-scrollbar-thumb {
+            background-color: #302c2c; /* Set the color of the scroll thumb */
+            border-radius: 4px; /* Add border radius to the scroll thumb */
+        }
+
+        #chat-log::-webkit-scrollbar-thumb:hover {
+            background-color: #000000; /* Set a different color for the scroll thumb on hover */
+        }
+
+        #chat-log p {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 10px;
+            display: inline-block;
+            max-width: 70%;
+        }
+
+        .user-message {
+             /* Align user messages to the right */
+            background-color: #0084ff;
+            color: #ffffff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.4; 
+            
+            
+        }
+
+        .assistant-message {
+            background-color: #f1f1f1;;
+            color:#333333;
+            text-align: left; /* Align assistant messages to the left */
+        }
+        
+
+        
+        #user-input {
+            outline: none;
+            border: none;
+            flex: 1;
+            padding: 10px;
+            background-color: transparent; /* Set a transparent background */
+            color: #333; /* Set text color */
+            
+        }
+
+        /* Add this to your CSS file or style tag */
+        #send-btn {
+            background-color: transparent;
+            color: #333;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        
+        .bot-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        #input_section {
+            display: flex;
+            align-items: center;
+            
+            border-radius: 5px;
+            padding:5px;
+            max-width: 100%;
+            
+            margin-right: 0px;
+        }
+
+
+
+    </style>
+</head>
+<body>
+    <div id="floating-icon">
+        <img id="open-chat-btn" src="{% static 'message_app/images/chatbox-icon.svg' %}" />
+    </div>
+
+    <div id="chatbox" class="hidden">
+        <div class="bot-name">ICo</div>
+        <div id="chat">
+            <div id="chat-log">
+                <!-- Display chat messages here -->
+            </div>
+            <div id="input_section">
+                <input type="text" id="user-input" placeholder="Type your message" style="width: 200px; ">
+                <button id="send-btn" >
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+        </div>
+        
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            const chatLog = $('#chat-log');
+            const userInput = $('#user-input');
+            const sendBtn = $('#send-btn');
+            const openChatBtn = $('#open-chat-btn');
+            const chatbox = $('#chatbox');
+            const csrfToken = $('#csrf-token').val();
+    
+            openChatBtn.click(function() {
+                chatbox.toggleClass('hidden');
+                scrollChatToBottom();
+            });
+    
+            function sendMessage() {
+                const userMessage = userInput.val().trim();
+                if (userMessage === '') return;
+    
+                chatLog.append(`<p class="user-message" >User: ${userMessage}</p>`);
+                userInput.val('');
+    
+                $.ajax({
+                    type: 'POST',
+                    url: '',
+                    data: {
+                        'csrfmiddlewaretoken': csrfToken,
+                        'user_message': userMessage
+                    },
+                    success: function(response) {
+                        if (response.assistant_response) {
+                            chatLog.append(`<p class="assistant-message">Chatbot: ${response.assistant_response}</p>`);
+                            
+                            scrollChatToBottom(); // Scroll to bottom after receiving a message
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+    
+            sendBtn.click(function() {
+                sendMessage();
+            });
+    
+            userInput.keypress(function(event) {
+                if (event.keyCode === 13) { // Enter key code
+                    sendMessage();
+                    event.preventDefault(); // Prevent the default behavior (form submission)
+                }
+            });
+    
+            function scrollChatToBottom() {
+                chatLog.scrollTop(chatLog.prop('scrollHeight'));
+            }
+            
+            
+            openChatBtn.click(function() {
+                chatbox.toggleClass('open'); 
+                //chatbox.toggleClass('closed');// Toggle the "open" class to trigger animation
+                scrollChatToBottom();
+            });
+            
+        });
+    </script>
+</body>
+</html>
